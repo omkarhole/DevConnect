@@ -30,14 +30,17 @@ const Navbar = () => {
                 <Link to="/communities" className="font-mono text-sm text-gray-300 hover:text-cyan-400 transition duration-200">~/communities</Link>
                 <Link to="/communities/create" className="font-mono text-sm text-gray-300 hover:text-cyan-400 transition duration-200">~/new-community</Link>
                 <Link to="/events" className="font-mono text-sm text-gray-300 hover:text-cyan-400 transition duration-200 relative flex items-center gap-1">
-                    <Calendar className="w-4 h-4" />
                     ~/events
                 </Link>
                 <Link to="/messages" className="font-mono text-sm text-gray-300 hover:text-cyan-400 transition duration-200 relative flex items-center gap-1">
-                    <MessageSquare className="w-4 h-4" />
                     ~/messages
                     <MessageNotificationBadge />
                 </Link>
+                <Link to="/contributors"
+                   className="font-mono text-sm text-gray-300 hover:text-cyan-400 transition duration-200" >
+                  ~/contributors
+                 </Link>
+
             </div>
 
             {/*Desktop Auth*/}

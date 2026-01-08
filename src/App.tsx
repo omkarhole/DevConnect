@@ -11,6 +11,7 @@ import MessagesPage from './pages/MessagesPage.tsx'
 import EventsPage from './pages/EventsPage.tsx'
 import EventDetailPage from './pages/EventDetailPage.tsx'
 import CreateEventPage from './pages/CreateEventPage.tsx'
+import ScrollToTop from "./components/ScrollToTop";
 import LoginPage from './pages/LoginPage.tsx'
 import RegisterPage from './pages/RegisterPage.tsx'
 import ForgetPasswordPage from './pages/ForgotPasswordPage.tsx'
@@ -18,6 +19,7 @@ import ResetPasswordPage from './pages/ResetPasswordPage.tsx'
 import PublicRoute from './components/PublicRoute.tsx'
 import ProtectedRoute from './components/ProtectedRoute.tsx'
 import ProfilePage from './pages/ProfilePage.tsx'
+import Contributors from './pages/Contributors.tsx'
 
 function App() {
   return (
@@ -30,6 +32,8 @@ function App() {
           <Route path="/communities" element={<CommunitiesPage />} />
           <Route path="/communities/:id" element={<CommunityPage />} />
           <Route path="/events" element={<EventsPage />} />
+          <Route path="/contributors" element={<Contributors />} />
+
 
           {/* Public Routes */}
           <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
@@ -50,6 +54,7 @@ function App() {
         </Routes>
       </main>
       <Footer />
+      <ScrollToTop />
     </div>
   )
 }
