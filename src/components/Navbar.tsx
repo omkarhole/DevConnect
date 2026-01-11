@@ -1,4 +1,4 @@
-
+import { useNavigate } from "react-router-dom";
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth';
@@ -12,11 +12,14 @@ const Navbar = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const { theme, toggleTheme } = useTheme();
     const { signOut, user } = useAuth();
+    const navigate = useNavigate();
+
 
     const handleSignOut=async()=>{
       try{
         await signOut();
         showSuccess("Logged out successfully");
+        navigate("/login");
 
       }
       catch{
