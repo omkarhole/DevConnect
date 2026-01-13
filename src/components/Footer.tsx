@@ -5,7 +5,8 @@ import {
   TrendingUp, Calendar, ShieldCheck, CpuIcon, RadioTower, MessageSquare,
   Users, Users2, Server, Globe, CheckCircle, X, Sparkles, Rocket,
   Activity, Clock, Wifi, Terminal, Layers, ChevronUp, Home,
-  Users as UsersIcon, Plus, User, LogIn, UserPlus, GitMerge
+  Users as UsersIcon, Plus, User, LogIn, UserPlus, GitMerge,
+  Sun, Moon
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -16,8 +17,25 @@ export default function Footer() {
   const [subscriptionSuccess, setSubscriptionSuccess] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
 
   useEffect(() => {
+    // Check for saved theme preference or system preference
+    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
+    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    
+    let initialTheme = 'dark';
+    if (savedTheme) {
+      initialTheme = savedTheme;
+    } else if (!systemPrefersDark) {
+      initialTheme = 'light';
+    }
+    
+    setTheme(initialTheme as 'light' | 'dark');
+    // Set initial class on HTML element
+    document.documentElement.classList.remove('light', 'dark');
+    document.documentElement.classList.add(initialTheme);
+
     const handleMouseMove = (e: MouseEvent) => {
       setMousePosition({ x: e.clientX, y: e.clientY });
     };
@@ -51,67 +69,169 @@ export default function Footer() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const toggleTheme = () => {
+    const newTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+    
+    // Remove both classes and add the new one
+    document.documentElement.classList.remove('light', 'dark');
+    document.documentElement.classList.add(newTheme);
+    
+    // Force re-render of all components by triggering a state change
+    // This ensures the theme updates immediately
+    const event = new CustomEvent('themeChanged', { detail: newTheme });
+    window.dispatchEvent(event);
+  };
+
+  // Listen for theme changes from other components
+  useEffect(() => {
+    const handleThemeChange = (e: CustomEvent) => {
+      const newTheme = e.detail;
+      setTheme(newTheme);
+    };
+
+    window.addEventListener('themeChanged', handleThemeChange as EventListener);
+    
+    return () => {
+      window.removeEventListener('themeChanged', handleThemeChange as EventListener);
+    };
+  }, []);
+
   const parallaxX = (mousePosition.x / window.innerWidth - 0.5) * 20;
   const parallaxY = (mousePosition.y / window.innerHeight - 0.5) * 20;
 
+  // Theme based classes
+  const isDark = theme === 'dark';
+  
+  const footerClasses = isDark 
+    ? "relative bg-gradient-to-b from-gray-900 via-gray-900 to-black border-t border-cyan-900/30 text-gray-300 overflow-hidden pt-12"
+    : "relative bg-gradient-to-b from-white via-gray-50 to-gray-100 border-t border-blue-200 text-gray-700 overflow-hidden pt-12";
+
+  const scrollTopButtonClasses = isDark
+    ? "fixed right-6 bottom-6 z-50 p-3 bg-gradient-to-br from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white rounded-full shadow-lg hover:shadow-cyan-500/25 transition-all duration-300 hover:scale-110 active:scale-95 group"
+    : "fixed right-6 bottom-6 z-50 p-3 bg-gradient-to-br from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-full shadow-lg hover:shadow-blue-500/25 transition-all duration-300 hover:scale-110 active:scale-95 group";
+
+  const statsBarClasses = isDark
+    ? "relative z-10 py-4 border-b border-cyan-900/50 bg-gray-900/30 backdrop-blur-sm"
+    : "relative z-10 py-4 border-b border-blue-100 bg-white/50 backdrop-blur-sm";
+
+  const cardClasses = isDark
+    ? "bg-gray-800/30 border-gray-700 hover:border-cyan-500/50 hover:bg-gray-800/50 hover:shadow-cyan-500/10"
+    : "bg-gray-100/50 border-gray-300 hover:border-blue-400/50 hover:bg-gray-200/50 hover:shadow-blue-500/10";
+
+  const textGradient = isDark
+    ? "bg-gradient-to-r from-cyan-300 via-blue-300 to-purple-300"
+    : "bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600";
+
+  const iconColor = isDark ? "text-cyan-400" : "text-blue-600";
+  const iconColor300 = isDark ? "text-cyan-300" : "text-blue-500";
+  const textColor = isDark ? "text-gray-400" : "text-gray-600";
+  const textColorLight = isDark ? "text-gray-300" : "text-gray-700";
+  const borderColor = isDark ? "border-gray-800" : "border-gray-200";
+  const inputBg = isDark ? "bg-gray-800/50 border-gray-700" : "bg-white/80 border-gray-300";
+
   return (
     <>
-      <footer className="relative bg-gradient-to-b from-gray-900 via-gray-900 to-black border-t border-cyan-900/30 text-gray-300 overflow-hidden pt-12">
+      <footer className={footerClasses}>
         
         {/* Scroll to Top Button */}
         {showScrollTop && (
           <button
             onClick={scrollToTop}
-            className="fixed right-6 bottom-6 z-50 p-3 bg-gradient-to-br from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white rounded-full shadow-lg hover:shadow-cyan-500/25 transition-all duration-300 hover:scale-110 active:scale-95 group"
+            className={scrollTopButtonClasses}
             aria-label="Scroll to top"
           >
             <ChevronUp className="w-5 h-5 group-hover:-translate-y-0.5 transition-transform" />
           </button>
         )}
 
+        {/* Theme Toggle Button - FIXED */}
+        <button
+          onClick={toggleTheme}
+          className={`fixed left-6 bottom-6 z-50 p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110 active:scale-95 ${
+            isDark 
+              ? 'bg-gray-800 hover:bg-gray-700 text-yellow-300 border border-gray-700' 
+              : 'bg-white hover:bg-gray-100 text-gray-700 border border-gray-300'
+          }`}
+          aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
+        >
+          {isDark ? (
+            <Sun className="w-5 h-5" />
+          ) : (
+            <Moon className="w-5 h-5" />
+          )}
+        </button>
+
         {/* Animated Background Effects */}
         <div className="absolute inset-0 pointer-events-none">
           {/* Grid Pattern */}
-          <div className="absolute inset-0 opacity-5"
-               style={{
-                 backgroundImage: `linear-gradient(90deg, #0ea5e9 1px, transparent 1px),
-                                 linear-gradient(180deg, #0ea5e9 1px, transparent 1px)`,
-                 backgroundSize: '60px 60px'
-               }}></div>
+          <div 
+            className="absolute inset-0 opacity-5"
+            style={{
+              backgroundImage: `linear-gradient(90deg, ${isDark ? '#0ea5e9' : '#3b82f6'} 1px, transparent 1px),
+                                linear-gradient(180deg, ${isDark ? '#0ea5e9' : '#3b82f6'} 1px, transparent 1px)`,
+              backgroundSize: '60px 60px'
+            }}
+          ></div>
           
           {/* Animated Orbs */}
-          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl animate-pulse" 
-               style={{ animationDelay: '2s' }}></div>
+          {isDark ? (
+            <>
+              <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl animate-pulse"></div>
+              <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl animate-pulse" 
+                   style={{ animationDelay: '2s' }}></div>
+            </>
+          ) : (
+            <>
+              <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl animate-pulse"></div>
+              <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl animate-pulse" 
+                   style={{ animationDelay: '2s' }}></div>
+            </>
+          )}
           
           {/* Floating Particles */}
           {[...Array(8)].map((_, i) => (
             <div 
               key={i}
-              className="absolute w-1 h-1 bg-cyan-400/30 rounded-full"
+              className="absolute w-1 h-1 rounded-full"
               style={{
                 left: `${10 + i * 12}%`,
                 top: `${30 + Math.sin(i) * 40}%`,
                 animation: `float ${3 + i * 0.5}s ease-in-out infinite`,
-                animationDelay: `${i * 0.3}s`
+                animationDelay: `${i * 0.3}s`,
+                backgroundColor: isDark ? 'rgba(56, 189, 248, 0.3)' : 'rgba(59, 130, 246, 0.2)'
               }}
             ></div>
           ))}
           
           {/* Scan Line */}
-          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-500 to-transparent animate-scan"></div>
+          <div 
+            className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent animate-scan"
+            style={{
+              backgroundImage: `linear-gradient(to right, transparent, ${isDark ? '#06b6d4' : '#3b82f6'}, transparent)`
+            }}
+          ></div>
         </div>
 
         {/* Live Stats Bar */}
-        <div className="relative z-10 py-4 border-b border-cyan-900/50 bg-gray-900/30 backdrop-blur-sm">
+        <div className={statsBarClasses}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="flex items-center gap-2 bg-gray-800/50 px-3 py-1.5 rounded-lg border border-green-900/30">
+              <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border ${
+                isDark 
+                  ? 'bg-gray-800/50 border-green-900/30' 
+                  : 'bg-green-50 border-green-200'
+              }`}>
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-green-400 font-medium">All Systems Operational</span>
+                <span className="text-green-600 font-medium">All Systems Operational</span>
               </div>
-              <div className="text-sm text-gray-400 bg-gray-800/30 px-3 py-1.5 rounded-lg">
-                Last updated: <span className="text-cyan-300 font-medium">Just now</span>
+              <div className={`text-sm px-3 py-1.5 rounded-lg ${
+                isDark 
+                  ? 'text-gray-400 bg-gray-800/30' 
+                  : 'text-gray-600 bg-gray-100'
+              }`}>
+                Last updated: <span className={`${isDark ? 'text-cyan-300' : 'text-blue-600'} font-medium`}>Just now</span>
               </div>
             </div>
           </div>
@@ -127,20 +247,20 @@ export default function Footer() {
             <div className="space-y-6">
               <div className="flex items-center gap-3 group">
                 <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl blur opacity-75 group-hover:opacity-100 transition-opacity duration-500"></div>
-                  <div className="relative p-2 bg-gray-900 rounded-xl border border-cyan-500/20 group-hover:border-cyan-500/40 transition-all duration-300 group-hover:scale-105">
-                    <Code2 className="w-8 h-8 text-cyan-300 group-hover:scale-110 group-hover:rotate-12 transition-transform duration-300" />
+                  <div className={`absolute inset-0 bg-gradient-to-r ${isDark ? 'from-cyan-500 to-blue-500' : 'from-blue-500 to-indigo-500'} rounded-xl blur opacity-75 group-hover:opacity-100 transition-opacity duration-500`}></div>
+                  <div className={`relative p-2 ${isDark ? 'bg-gray-900 border-cyan-500/20' : 'bg-white border-blue-200'} rounded-xl border group-hover:scale-105 transition-all duration-300 ${isDark ? 'group-hover:border-cyan-500/40' : 'group-hover:border-blue-300'}`}>
+                    <Code2 className={`w-8 h-8 ${iconColor300} group-hover:scale-110 group-hover:rotate-12 transition-transform duration-300`} />
                   </div>
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold bg-gradient-to-r from-cyan-300 via-blue-300 to-purple-300 bg-clip-text text-transparent">
+                  <h2 className={`text-2xl font-bold bg-clip-text text-transparent ${textGradient}`}>
                     DevConnect
                   </h2>
-                  <p className="text-sm text-gray-400">Next Generation Dev Community</p>
+                  <p className={`text-sm ${textColor}`}>Next Generation Dev Community</p>
                 </div>
               </div>
               
-              <p className="text-gray-400 text-sm leading-relaxed group-hover:text-gray-300 transition-colors duration-300">
+              <p className={`text-sm leading-relaxed ${isDark ? 'group-hover:text-gray-300' : 'group-hover:text-gray-800'} transition-colors duration-300 ${textColor}`}>
                 Connect, collaborate, and build with developers worldwide. Join the fastest-growing developer ecosystem.
               </p>
               
@@ -157,7 +277,11 @@ export default function Footer() {
                     href={social.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`p-2.5 rounded-lg bg-gray-800/50 border border-gray-700 text-gray-400 ${social.color} transition-all duration-300 transform hover:scale-110 hover:-translate-y-1`}
+                    className={`p-2.5 rounded-lg border ${social.color} transition-all duration-300 transform hover:scale-110 hover:-translate-y-1 ${
+                      isDark 
+                        ? 'bg-gray-800/50 border-gray-700 text-gray-400' 
+                        : 'bg-gray-100 border-gray-300 text-gray-600'
+                    }`}
                     style={{ animationDelay: `${i * 0.1}s` }}
                     aria-label={social.label}
                   >
@@ -167,10 +291,10 @@ export default function Footer() {
               </div>
             </div>
 
-            {/* Quick Links (Navbar ke links ke hisab se) */}
+            {/* Quick Links */}
             <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-white flex items-center gap-2 group">
-                <Zap className="w-5 h-5 text-cyan-400 group-hover:rotate-45 transition-transform duration-300" />
+              <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'} flex items-center gap-2 group`}>
+                <Zap className={`w-5 h-5 ${iconColor} group-hover:rotate-45 transition-transform duration-300`} />
                 Quick Navigation
               </h3>
               <div className="grid grid-cols-2 gap-3">
@@ -187,50 +311,50 @@ export default function Footer() {
                   <Link
                     key={i}
                     to={link.path}
-                    className="group p-3 rounded-lg bg-gray-800/30 border border-gray-700 hover:border-cyan-500/50 hover:bg-gray-800/50 transition-all duration-300 hover:translate-x-1 hover:shadow-lg hover:shadow-cyan-500/10 relative overflow-hidden"
+                    className={`group p-3 rounded-lg border transition-all duration-300 hover:translate-x-1 hover:shadow-lg relative overflow-hidden ${cardClasses}`}
                     style={{ transform: `translate(${parallaxX * 0.05}px, ${parallaxY * 0.05}px)` }}
                   >
-                    <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/0 via-cyan-500/10 to-blue-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    <div className={`absolute inset-0 bg-gradient-to-r ${isDark ? 'from-cyan-500/0 via-cyan-500/10 to-blue-500/0' : 'from-blue-500/0 via-blue-500/5 to-indigo-500/0'} opacity-0 group-hover:opacity-100 transition-opacity duration-500`}></div>
                     <div className="relative flex items-center gap-2">
-                      <link.icon className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform duration-300" />
-                      <span className="text-sm font-medium group-hover:text-white transition-colors duration-300">{link.label}</span>
+                      <link.icon className={`w-4 h-4 ${iconColor} group-hover:scale-110 transition-transform duration-300`} />
+                      <span className={`text-sm font-medium ${isDark ? 'group-hover:text-white' : 'group-hover:text-blue-700'} transition-colors duration-300 ${textColorLight}`}>{link.label}</span>
                     </div>
                   </Link>
                 ))}
               </div>
             </div>
 
-            {/* Tech Stack (Readme file ke hisab se) */}
+            {/* Tech Stack */}
             <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-white flex items-center gap-2 group">
-                <CpuIcon className="w-5 h-5 text-cyan-400 group-hover:animate-spin transition-all duration-300" />
+              <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'} flex items-center gap-2 group`}>
+                <CpuIcon className={`w-5 h-5 ${iconColor} group-hover:animate-spin transition-all duration-300`} />
                 Tech Stack
               </h3>
               <div className="grid grid-cols-2 gap-3">
                 {[
-                  { icon: RadioTower, label: "React 18", desc: "Frontend", color: "text-cyan-400" },
-                  { icon: Server, label: "TypeScript", desc: "Type Safety", color: "text-blue-400" },
-                  { icon: Database, label: "Supabase", desc: "Backend & DB", color: "text-green-400" },
-                  { icon: Shield, label: "Tailwind", desc: "Styling", color: "text-purple-400" },
-                  { icon: Cloud, label: "Vite", desc: "Build Tool", color: "text-orange-400" },
-                  { icon: GitMerge, label: "TanStack", desc: "Data Fetching", color: "text-pink-400" },
+                  { icon: RadioTower, label: "React 18", desc: "Frontend", color: isDark ? "text-cyan-400" : "text-blue-500" },
+                  { icon: Server, label: "TypeScript", desc: "Type Safety", color: isDark ? "text-blue-400" : "text-indigo-500" },
+                  { icon: Database, label: "Supabase", desc: "Backend & DB", color: isDark ? "text-green-400" : "text-emerald-500" },
+                  { icon: Shield, label: "Tailwind", desc: "Styling", color: isDark ? "text-purple-400" : "text-violet-500" },
+                  { icon: Cloud, label: "Vite", desc: "Build Tool", color: isDark ? "text-orange-400" : "text-orange-500" },
+                  { icon: GitMerge, label: "TanStack", desc: "Data Fetching", color: isDark ? "text-pink-400" : "text-pink-500" },
                 ].map((tech, i) => (
                   <div
                     key={i}
-                    className="group p-3 rounded-lg bg-gray-800/30 border border-gray-700 hover:border-cyan-500/50 hover:bg-gray-800/50 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/10 relative overflow-hidden"
+                    className={`group p-3 rounded-lg border transition-all duration-300 hover:shadow-lg relative overflow-hidden ${cardClasses}`}
                     style={{ 
                       transform: `translate(${parallaxX * (0.1 - i * 0.01)}px, ${parallaxY * (0.1 - i * 0.01)}px)`,
                       transitionDelay: `${i * 0.05}s`
                     }}
                   >
-                    <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/0 via-cyan-500/5 to-blue-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    <div className={`absolute inset-0 bg-gradient-to-br ${isDark ? 'from-cyan-500/0 via-cyan-500/5 to-blue-500/0' : 'from-blue-500/0 via-blue-500/3 to-indigo-500/0'} opacity-0 group-hover:opacity-100 transition-opacity duration-500`}></div>
                     <div className="relative flex items-center gap-3">
-                      <div className={`p-2 rounded-lg bg-gray-900 group-hover:scale-110 transition-transform duration-300 ${tech.color}`}>
+                      <div className={`p-2 rounded-lg ${isDark ? 'bg-gray-900' : 'bg-white border border-gray-200'} group-hover:scale-110 transition-transform duration-300 ${tech.color}`}>
                         <tech.icon className="w-4 h-4 group-hover:rotate-12 transition-transform duration-300" />
                       </div>
                       <div>
-                        <div className="text-sm font-medium group-hover:text-white transition-colors duration-300">{tech.label}</div>
-                        <div className="text-xs text-gray-400 group-hover:text-gray-300 transition-colors duration-300">{tech.desc}</div>
+                        <div className={`text-sm font-medium ${isDark ? 'group-hover:text-white' : 'group-hover:text-gray-900'} transition-colors duration-300 ${textColorLight}`}>{tech.label}</div>
+                        <div className={`text-xs ${isDark ? 'group-hover:text-gray-300' : 'group-hover:text-gray-600'} transition-colors duration-300 ${textColor}`}>{tech.desc}</div>
                       </div>
                     </div>
                   </div>
@@ -240,44 +364,30 @@ export default function Footer() {
 
             {/* Auth Links & Newsletter */}
             <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-white flex items-center gap-2 group">
-                <Rocket className="w-5 h-5 text-cyan-400 group-hover:rotate-45 transition-transform duration-300" />
+              <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'} flex items-center gap-2 group`}>
+                <Rocket className={`w-5 h-5 ${iconColor} group-hover:rotate-45 transition-transform duration-300`} />
                 Join DevConnect
               </h3>
               
-              <p className="text-gray-400 text-sm group-hover:text-gray-300 transition-colors duration-300">
+              <p className={`text-sm ${isDark ? 'group-hover:text-gray-300' : 'group-hover:text-gray-700'} transition-colors duration-300 ${textColor}`}>
                 Get exclusive access to new features, beta programs, and community insights.
               </p>
-              
-              {/* Auth Links */}
-              {/* <div className="grid grid-cols-2 gap-3 mb-4">
-                <Link
-                  to="/login"
-                  className="group p-3 rounded-lg bg-cyan-900/30 border border-cyan-500/30 hover:border-cyan-500/50 hover:bg-cyan-900/50 transition-all duration-300 flex items-center gap-2 justify-center"
-                >
-                  <LogIn className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform" />
-                  <span className="text-sm font-medium">Sign In</span>
-                </Link>
-                <Link
-                  to="/register"
-                  className="group p-3 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 border border-cyan-500/50 hover:from-cyan-700 hover:to-blue-700 transition-all duration-300 flex items-center gap-2 justify-center"
-                >
-                  <UserPlus className="w-4 h-4 text-white group-hover:scale-110 transition-transform" />
-                  <span className="text-sm font-medium text-white">Sign Up</span>
-                </Link>
-              </div> */}
               
               {/* Newsletter */}
               <form onSubmit={handleSubscribe} className="space-y-3">
                 <div className="relative group/input">
-                  <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-xl opacity-0 group-hover/input:opacity-100 transition-opacity duration-300"></div>
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500 group-hover/input:text-cyan-400 transition-colors duration-300 z-10" />
+                  <div className={`absolute inset-0 bg-gradient-to-r ${isDark ? 'from-cyan-500/10 to-blue-500/10' : 'from-blue-500/5 to-indigo-500/5'} rounded-xl opacity-0 group-hover/input:opacity-100 transition-opacity duration-300`}></div>
+                  <Mail className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 ${isDark ? 'text-gray-500' : 'text-gray-400'} ${isDark ? 'group-hover/input:text-cyan-400' : 'group-hover/input:text-blue-500'} transition-colors duration-300 z-10`} />
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="developer@example.com"
-                    className="relative w-full pl-10 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-transparent transition-all duration-300 focus:shadow-lg focus:shadow-cyan-500/20 z-10"
+                    className={`relative w-full pl-10 pr-4 py-3 ${inputBg} rounded-xl ${isDark ? 'text-white' : 'text-gray-900'} placeholder-gray-500 focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-300 focus:shadow-lg z-10 ${
+                      isDark 
+                        ? 'focus:ring-cyan-500/50 focus:shadow-cyan-500/20'
+                        : 'focus:ring-blue-500/50 focus:shadow-blue-500/20'
+                    }`}
                     required
                   />
                 </div>
@@ -288,8 +398,14 @@ export default function Footer() {
                   className={`w-full py-3 px-4 rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-2 relative overflow-hidden group/button ${
                     subscriptionSuccess 
                       ? 'bg-green-600 hover:bg-green-700' 
-                      : 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700'
-                  } hover:shadow-lg hover:shadow-cyan-500/25 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed`}
+                      : isDark
+                        ? 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700'
+                        : 'bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700'
+                  } hover:shadow-lg active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed text-white ${
+                    isDark 
+                      ? 'hover:shadow-cyan-500/25'
+                      : 'hover:shadow-blue-500/25'
+                  }`}
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover/button:opacity-100 transition-opacity duration-300"></div>
                   {isSubmitting ? (
@@ -310,19 +426,19 @@ export default function Footer() {
                   )}
                 </button>
                 
-                <p className="text-xs text-gray-500 text-center group-hover:text-gray-400 transition-colors duration-300">
+                <p className={`text-xs text-center ${isDark ? 'group-hover:text-gray-400' : 'group-hover:text-gray-600'} transition-colors duration-300 ${textColor}`}>
                   No spam, unsubscribe anytime
                 </p>
               </form>
               
               {/* Live Activity */}
-              <div className="pt-4 border-t border-gray-800 mt-6 group/activity">
+              <div className={`pt-4 border-t ${borderColor} mt-6 group/activity`}>
                 <div className="flex items-center justify-between text-sm">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse group-hover/activity:scale-150 transition-transform duration-300"></div>
-                    <span className="text-gray-400 group-hover/activity:text-gray-300 transition-colors duration-300">Live Activity</span>
+                    <span className={`${isDark ? 'group-hover/activity:text-gray-300' : 'group-hover/activity:text-gray-700'} transition-colors duration-300 ${textColor}`}>Live Activity</span>
                   </div>
-                  <div className="text-cyan-300 font-medium group-hover/activity:text-cyan-400 group-hover/activity:scale-105 transition-all duration-300">
+                  <div className={`${isDark ? 'text-cyan-300 group-hover/activity:text-cyan-400' : 'text-blue-600 group-hover/activity:text-blue-700'} font-medium group-hover/activity:scale-105 transition-all duration-300`}>
                     15 online • 3 new
                   </div>
                 </div>
@@ -331,22 +447,19 @@ export default function Footer() {
           </div>
 
           {/* Footer Bottom */}
-          <div className="pt-8 border-t border-gray-800 relative group/bottom">
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-500/10 to-transparent opacity-0 group-hover/bottom:opacity-100 transition-opacity duration-500"></div>
+          <div className={`pt-8 border-t ${borderColor} relative group/bottom`}>
+            <div className={`absolute inset-0 bg-gradient-to-r from-transparent ${isDark ? 'via-cyan-500/10' : 'via-blue-500/5'} to-transparent opacity-0 group-hover/bottom:opacity-100 transition-opacity duration-500`}></div>
             
             <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div className="space-y-3">
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3 text-sm group/copyright">
-                  <span className="group-hover/copyright:text-white transition-colors duration-300">© {year} DevConnect. All rights reserved.</span>
-                  <span className="hidden sm:inline text-gray-500 group-hover/copyright:text-gray-400 transition-colors duration-300">•</span>
-                  {/* <span className="text-cyan-300 group-hover/copyright:text-cyan-400 group-hover/copyright:scale-105 transition-all duration-300 bg-cyan-900/20 px-3 py-1 rounded-lg border border-cyan-500/20">
-                    v2.8.1 • Build #421
-                  </span> */}
+                  <span className={`${isDark ? 'group-hover/copyright:text-white' : 'group-hover/copyright:text-gray-900'} transition-colors duration-300 ${textColorLight}`}>© {year} DevConnect. All rights reserved.</span>
+                  <span className={`hidden sm:inline ${isDark ? 'text-gray-500' : 'text-gray-400'} ${isDark ? 'group-hover/copyright:text-gray-400' : 'group-hover/copyright:text-gray-500'} transition-colors duration-300`}>•</span>
                 </div>
                 
-                <div className="flex items-center gap-2 text-sm text-gray-500 group/passion">
+                <div className="flex items-center gap-2 text-sm group/passion">
                   <Heart className="w-4 h-4 text-red-400 group-hover/passion:animate-pulse transition-all duration-300" />
-                  <span className="group-hover/passion:text-gray-400 transition-colors duration-300">
+                  <span className={`${isDark ? 'group-hover/passion:text-gray-400' : 'group-hover/passion:text-gray-600'} transition-colors duration-300 ${textColor}`}>
                     Made with passion for developers worldwide
                   </span>
                 </div>
@@ -357,13 +470,19 @@ export default function Footer() {
                   <a
                     key={i}
                     href={item === "Docs" ? "/docs" : "#"}
-                    className="text-gray-400 hover:text-cyan-300 transition-all duration-300 relative group/link overflow-hidden"
+                    className={`transition-all duration-300 relative group/link overflow-hidden ${
+                      isDark 
+                        ? 'text-gray-400 hover:text-cyan-300' 
+                        : 'text-gray-600 hover:text-blue-600'
+                    }`}
                     style={{ animationDelay: `${i * 0.1}s` }}
                   >
                     <span className="relative z-10 group-hover/link:translate-x-1 transition-transform duration-300">
                       {item}
                     </span>
-                    <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-cyan-400 group-hover/link:w-full transition-all duration-300"></span>
+                    <span className={`absolute bottom-0 left-0 w-0 h-0.5 group-hover/link:w-full transition-all duration-300 ${
+                      isDark ? 'bg-cyan-400' : 'bg-blue-500'
+                    }`}></span>
                   </a>
                 ))}
               </div>
@@ -374,11 +493,19 @@ export default function Footer() {
         {/* Floating Trending Element */}
         <div className="absolute bottom-24 right-6 lg:right-10 hidden lg:block">
           <div className="relative group">
-            <div className="absolute inset-0 bg-cyan-500/20 rounded-full blur-xl"></div>
-            <div className="relative p-3 bg-gradient-to-br from-cyan-900/30 to-blue-900/30 backdrop-blur-sm border border-cyan-500/30 rounded-2xl shadow-lg group-hover:border-cyan-500/50 transition-all duration-300 group-hover:scale-105">
+            <div className={`absolute inset-0 rounded-full blur-xl ${
+              isDark ? 'bg-cyan-500/20' : 'bg-blue-500/10'
+            }`}></div>
+            <div className={`relative p-3 backdrop-blur-sm border rounded-2xl shadow-lg group-hover:scale-105 transition-all duration-300 ${
+              isDark
+                ? 'bg-gradient-to-br from-cyan-900/30 to-blue-900/30 border-cyan-500/30 group-hover:border-cyan-500/50'
+                : 'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200 group-hover:border-blue-300'
+            }`}>
               <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-yellow-400" />
-                <span className="text-sm font-medium">Trending: 150+ new posts today</span>
+                <Sparkles className="w-4 h-4 text-yellow-500" />
+                <span className={`text-sm font-medium ${
+                  isDark ? 'text-gray-300' : 'text-gray-700'
+                }`}>Trending: 150+ new posts today</span>
               </div>
             </div>
           </div>
@@ -398,29 +525,12 @@ export default function Footer() {
             100% { transform: translateY(100vh); }
           }
           
-          @keyframes gradient {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-          }
-          
           .animate-float {
             animation: float 3s ease-in-out infinite;
           }
           
           .animate-scan {
             animation: scan 4s linear infinite;
-          }
-          
-          .animate-gradient {
-            background-size: 200% 200%;
-            animation: gradient 3s ease infinite;
-          }
-          
-          .transition-all {
-            transition-property: all;
-            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-            transition-duration: 300ms;
           }
         `}
       </style>
